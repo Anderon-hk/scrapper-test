@@ -11,10 +11,11 @@ const browser = await puppeteer.launch({
     // ]
     
 });
-let page = await browser.pages()[0].page;
-await page.goto("https://youtube.com", {
+let page = await browser.newPage();
+await page.goto(process.env.URL, {
     waitUntil: 'networkidle2'
-})
+});
+
 // await page.screenshot(
 //     {
 //         path: "test.png"
