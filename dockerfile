@@ -1,9 +1,9 @@
 ARG NODE_VERSION=18.0.0 #place holder for node version
 
 FROM node:${NODE_VERSION}-bullseye-slim as base
-WORKDIR /app
-USER node
-COPY . .
+# WORKDIR /app
+# USER node
+# COPY . .
 # CMD npm run dev
 
 FROM base as dev2
@@ -20,15 +20,21 @@ RUN apt-get update \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros fonts-kacst fonts-freefont-ttf libxss1 dbus dbus-x11 \
       --no-install-recommends \
     && service dbus start \
-    && rm -rf /var/lib/apt/lists/* \
-    && groupadd -r -f audio \
+    && rm -rf /var/lib/apt/lists/*
+    
+RUN groupadd -r -f audio \
     && groupadd -r -f video \
-    && usermod -a G audio,video node
+    && usermod -a -G audio,video node
 
+WORKDIR /app
 COPY package.json .
 COPY pnpm-lock.yaml .
-
 RUN --mount=type=bind,source=package.json,target=package.json \
     # --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
     --mount=type=cache,id=pnpm,target=/pnpm/store
+
+USER node
+# RUN pnpm instal
+
+
