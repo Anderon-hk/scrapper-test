@@ -1,6 +1,7 @@
 ARG NODE_VERSION=18.0.0 #place holder for node version
 
 FROM node:${NODE_VERSION}-bullseye-slim as base
+RUN corepack enable
 # WORKDIR /app
 # USER node
 # COPY . .
@@ -26,6 +27,7 @@ RUN groupadd -r -f audio \
     && groupadd -r -f video \
     && usermod -a -G audio,video node
 
+USER node
 WORKDIR /app
 COPY package.json .
 COPY pnpm-lock.yaml .
@@ -34,7 +36,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=cache,target=/root/.npm \
     --mount=type=cache,id=pnpm,target=/pnpm/store
 
-USER node
-# RUN pnpm instal
+# RUN npm install -g pnpm
+RUN pnpm install
 
 

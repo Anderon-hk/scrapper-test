@@ -10,13 +10,13 @@
 		"dockerfile": "../dockerfile"
 	},
 	"runArgs": ["--env-file", ".env"],
-	"features": {
-		"ghcr.io/devcontainers/features/node:1": {
-			"nodeGypDependencies": true,
-			"version": "18",
-			"nvmVersion": "0.39"
-		}
-	},
+	// "features": {
+	// 	"ghcr.io/devcontainers/features/node:1": {
+	// 		"nodeGypDependencies": true,
+	// 		"version": "18",
+	// 		"nvmVersion": "0.39"
+	// 	}
+	// },
 	"capAdd": [
 		"SYS_ADMIN"
 	], //add cap required for puppeteer
@@ -25,9 +25,18 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Uncomment the next line to run commands after the container is created.
-	"postCreateCommand": "pnpm install",
+	// "postCreateCommand": "pnpm install",
 	// Configure tool-specific properties.
 	// "customizations": {},
 	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
-	"remoteUser": "node"
+	"remoteUser": "node",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"albert.TabOut",
+				"ms-vscode.vscode-typescript-next",
+				"nitayneeman.puppeteer-snippets"
+			]
+		}
+	}
 }
