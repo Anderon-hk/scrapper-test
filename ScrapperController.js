@@ -1,4 +1,6 @@
 import { accessSync } from "node:fs"
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { ElementHandle } from "puppeteer";
 import { Browser, Page } from "puppeteer";
 
@@ -12,6 +14,7 @@ export default class ScrapperController {
      * @type {Page}
      */
     #startPage
+    #readArticlesFileUrl = 'readArticles'
 
     /**
      * Description
@@ -27,11 +30,12 @@ export default class ScrapperController {
         this.#browser = browser
     }
 
+
     async prepare() {
 
-        if(accessSync(this.#filePath)) {
-            
-        }
+        console.log('check printed file');
+        await this.readVisitedFile();
+
         console.time('prepare: new Page')
         this.#startPage = await this.#browser.newPage()
         console.timeEnd('prepare: new Page')
@@ -70,9 +74,53 @@ export default class ScrapperController {
         return this.#visitedArticles.has(title)
     }
 
-    readVisitedFile() {}
+    async readVisitedFile() {
+        let accessible = false
+        //check if file exists 
+        try {
+            let file = await access( path.resolve(this.#filePath, this.#readArticlesFileUrl) )
+            accessible = true
+        }catch(e ) {
+            console.log('file not exits'); 
+        }
+        
+        if(accessible) {
+            
+            try {
+                //the flag to avoid error if file is not exits and create one
+                let data = await readFile(
+                    path.resolve(this.#filePath, this.#readArticlesFileUrl),
+                    {flag:'a+'}
+                )
+                if(data) {
+                    data = JSON.parse(data)
+                    this.#visitedArticles = new Set(data)
+                }
+            }
+            
+            catch (e) {
+                console.error('error on read visited article file')
+                console.error(e.message);
+                this.#browser.close();
+            }
+        }
+        //test only
+        console.log(this.#visitedArticles)
+    }
 
-    writeVisitedFile() {}
+    async writeVisitedFile() {
+
+        let savePath = path.resolve(this.#filePath, this.#readArticlesFileUrl)
+        let articlesArray = Array.from(this.#visitedArticles)
+
+        //make dirs if not exits
+        await mkdir(this.#filePath, {recursive: true})
+        
+        await writeFile(
+            savePath,
+            JSON.stringify(articlesArray)
+        )
+    }
 
     markVisited(title) {
         this.#visitedArticles.add(title)
@@ -81,7 +129,7 @@ export default class ScrapperController {
     async start() {}
 
     /**
-     * 
+     * get the category tab items in the page
      * @returns {[{link: string, name:string}]}
      */
     async getNavItem() {
@@ -107,7 +155,7 @@ export default class ScrapperController {
     }
 
     /**
-     * 
+     * To create a new page of a category
      * @param {{link: string, name:string}} element 
      * @returns {Page}
      */
@@ -120,41 +168,5 @@ export default class ScrapperController {
 
         return catPage
         
-    }
-
-    /**
-     * 
-     * @param {Page} page
-     * @returns { [ {name: string, article: string} ] }
-     */
-    async getArticlesInpage(page) {
-        let list = [];
-        let bookList = await page.$$('a.bookItem');
-        console.log(`size: ${bookList.length}`)
-        for (let item of bookList) {
-            let article = {}
-            //get the link and title
-            article = await item.evaluate(ar => {
-                let name = ar.querySelector('.caption').innerText
-                name = name.replace('\n', ' ')
-                let link = ar.href
-                return {
-                    name,
-                    article: link
-                }
-            });
-            article.article = item.href
-            //not sure why can push and stoped
-            list.push(article)
-        }
-        return list;
-    }
-
-    /**
-     * @param {Page} page 
-     * @returns {string} the url of the next button
-     */
-    async getNextPageButton(page) {
-        return await page.$eval('span.step-links > a.right', (btn) => btn.href);
     }
 }
