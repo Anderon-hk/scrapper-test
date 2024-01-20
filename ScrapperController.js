@@ -3,6 +3,7 @@ import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { ElementHandle } from "puppeteer";
 import { Browser, Page } from "puppeteer";
+import ScrapperJob from "./ScrapperJob.js";
 
 export default class ScrapperController {
 
@@ -126,7 +127,17 @@ export default class ScrapperController {
         this.#visitedArticles.add(title)
     }
 
-    async start() {}
+    async start() {
+        // get the cat list
+        let catList = this.getNavItem();
+        let cat1 = catList[0];
+
+        //open new page for cat
+        let page = this.openPageForElement(cat1);
+
+        let job = new ScrapperJob(page, this.#filePath, this);
+        await job.run();
+    }
 
     /**
      * get the category tab items in the page
